@@ -2224,15 +2224,38 @@
             const originalThHTML = firstTh.innerHTML;
             firstTh.innerHTML = 'No';
 
-            // 5. Print
-            window.print();
+            // 5. Define restore function — called after print dialog closes
+            const restore = () => {
+                backups.forEach(b => b.parent.replaceChild(b.select, b.span));
+                previewBackups.forEach(({ preview, linkBar }) => linkBar.replaceWith(preview));
+                if (appendixEl) appendixEl.remove();
+                dragHandles.forEach(icon => icon.style.display = '');
+                firstTh.innerHTML = originalThHTML;
+            };
 
-            // 6. Restore everything
-            backups.forEach(b => b.parent.replaceChild(b.select, b.span));
-            previewBackups.forEach(({ preview, linkBar }) => linkBar.replaceWith(preview));
-            if (appendixEl) appendixEl.remove();
-            dragHandles.forEach(icon => icon.style.display = '');
-            firstTh.innerHTML = originalThHTML;
+            // 6. Force browser repaint before printing (critical for iOS Safari)
+            //    Two rAF frames guarantee the DOM changes have been painted.
+            //    The 250ms timeout gives iOS time to finish its own render pipeline.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // Use afterprint event to restore on desktop browsers.
+                        // iOS Safari does not fire afterprint, so also set a timeout fallback.
+                        let restored = false;
+                        const doRestore = () => {
+                            if (restored) return;
+                            restored = true;
+                            window.removeEventListener('afterprint', doRestore);
+                            restore();
+                        };
+                        window.addEventListener('afterprint', doRestore, { once: true });
+                        // iOS fallback: restore 3 seconds after print dialog opens
+                        setTimeout(doRestore, 3000);
+
+                        window.print();
+                    }, 250);
+                });
+            });
         }
 
         function exportToCSV() {
