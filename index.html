@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="tr"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Günlük QA Test Şablonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode */
+            --bg-body: #f4f7f6;
+            --bg-container: #fff;
+            --text-primary: #333;
+            --text-secondary: #1b1b20;
+            --border-color: #e0e0e0;
+            --row-even: #fbf8ff;
+            --row-hover: #f1f1f1;
+            --stats-bg: #efebf4;
+            --drag-handle: #a0a0a0;
+            --drag-hover: #5a5792;
+            --editable-hover-bg: #fff;
+            --editable-hover-border: #ccc;
+            --editable-focus-border: #5a5792;
+            --editable-focus-shadow: rgba(90, 87, 146, 0.1);
+            --container-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --modal-backdrop: rgba(0,0,0,0.5);
+            --modal-bg: #fff;
+            --modal-text: #333;
+            --modal-border: #e0e0e0;
+            --input-bg: #fff;
+            --filter-hover-bg: #ffe6e6;
+            --drag-bg: #e8e8e8;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f1117;
+            --bg-container: #1a1d27;
+            --text-primary: #e0e0e8;
+            --text-secondary: #c8c8d4;
+            --border-color: #2e3244;
+            --row-even: #1f2233;
+            --row-hover: #252940;
+            --stats-bg: #1f2233;
+            --drag-handle: #5a5e72;
+            --drag-hover: #8b87d6;
+            --editable-hover-bg: #252940;
+            --editable-hover-border: #3e4260;
+            --editable-focus-border: #8b87d6;
+            --editable-focus-shadow: rgba(139, 135, 214, 0.2);
+            --container-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --modal-backdrop: rgba(0,0,0,0.7);
+            --modal-bg: #1a1d27;
+            --modal-text: #e0e0e8;
+            --modal-border: #2e3244;
+            --input-bg: #252940;
+            --filter-hover-bg: rgba(255, 77, 77, 0.15);
+            --drag-bg: #252940;
+        }
+
+        * { box-sizing: border-box; }
+
+        /* Table scroll wrapper */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.35s ease, color 0.35s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-container);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--container-shadow);
+            transition: background 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        .header-title {
+            background: linear-gradient(135deg, var(--header-color-start, #5a5792), var(--header-color-end, #7b77b8));
+            color: #ffffff;
+            text-align: center;
+            padding: 18px;
+            border-radius: 10px 10px 0 0;
+            margin: -20px -20px 20px -20px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: background 0.4s ease;
+            position: relative;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 18px;
+            right: 24px;
+            z-index: 1000;
+            background: var(--bg-container);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Game Selector */
+        .game-selector-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .game-selector-label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        #game-selector {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            outline: none;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.3s ease, background 0.3s ease;
+            min-width: 200px;
+        }
+        #game-selector:focus {
+            border-color: var(--editable-focus-border);
+        }
+
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-button {
+            background-color: var(--bg-container);
+            border: 2px solid #ff4d4d;
+            color: #ff4d4d;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .filter-button:hover {
+            background-color: var(--filter-hover-bg);
+        }
+
+        .filter-button.active {
+            background-color: #ff4d4d;
+            color: #fff;
+        }
+
+        .filter-button input[type="checkbox"] {
+            display: none;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--stats-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--text-secondary);
+            transition: background-color 0.35s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            transition: border-color 0.3s ease;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--header-color-start, #5a5792), var(--header-color-end, #7b77b8));
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--row-even);
+        }
+
+        tr:hover {
+            background-color: var(--row-hover);
+        }
+
+        /* Sürükle-Bırak Stilleri */
+        .drag-handle {
+            cursor: grab;
+            color: var(--drag-handle);
+            font-size: 18px;
+            text-align: center;
+            user-select: none;
+            width: 30px;
+            transition: color 0.2s;
+        }
+
+        .drag-handle:hover {
+            color: var(--drag-hover);
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        tr.dragging {
+            opacity: 0.5;
+            background-color: var(--drag-bg) !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Düzenlenebilir alanlar */
+        [contenteditable="true"] {
+            padding: 4px;
+            border: 1px dashed transparent;
+            border-radius: 4px;
+            outline: none;
+            transition: all 0.2s;
+            min-height: 20px;
+        }
+
+        [contenteditable="true"]:hover {
+            border-color: var(--editable-hover-border);
+            background-color: var(--editable-hover-bg);
+        }
+
+        [contenteditable="true"]:focus {
+            border-color: var(--editable-focus-border);
+            background-color: var(--editable-hover-bg);
+            box-shadow: 0 0 0 2px var(--editable-focus-shadow);
+        }
+
+        /* Açılır menü stilleri */
+        td select {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            outline: none;
+            text-align: center;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        /* Kategori Renkleri */
+        .cat-install { background-color: #dce9cb; color: #2c481f; }
+        .cat-ui { background-color: #ddebff; color: #2a3243; }
+        .cat-core { background-color: #dbeeef; color: #133819; }
+        .cat-perf { background-color: #c0e1ff; color: #3f4170; }
+        .cat-iap { background-color: #bbe1ba; color: #3f4528; }
+
+        /* Durum Renkleri */
+        .status-success { background-color: #3ec08a; color: #003823; }
+        .status-pending { background-color: #ffd16e; color: #402c00; }
+        .status-fail { background-color: #ff9999; color: #660000; }
+
+        /* Öncelik Renkleri */
+        .prio-low { background-color: #e8eaed; color: #3c4043; }
+        .prio-med { background-color: #d2e3fc; color: #174ea6; }
+        .prio-high { background-color: #feefc3; color: #e27200; }
+        .prio-crit { background-color: #fad2cf; color: #a50e0e; }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #5a5792;
+        }
+
+        /* Butonlar ve Export Menüsü */
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-delete {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--header-color-start, #5a5792), var(--header-color-end, #7b77b8));
+            color: white;
+            padding: 12px 24px;
+            font-size: 14px;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .export-dropdown {
+            background-color: #3ec08a;
+            color: #003823;
+            padding: 10px 15px;
+            font-size: 14px;
+            appearance: none;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        .actions-col {
+            text-align: center;
+            width: 60px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--modal-backdrop);
+            z-index: 9998;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-backdrop.active {
+            display: flex;
+        }
+        .modal-box {
+            background: var(--modal-bg);
+            border: 1px solid var(--modal-border);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: var(--modal-text);
+            animation: slideUp 0.25s ease;
+        }
+        .modal-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .modal-box p {
+            margin: 0 0 24px 0;
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .modal-btn:hover {
+            transform: translateY(-1px);
+        }
+        .modal-btn-cancel {
+            background: var(--stats-bg);
+            color: var(--text-primary);
+        }
+        .modal-btn-discard {
+            background: #ff4d4d;
+            color: white;
+        }
+        .modal-btn-save {
+            background: #3ec08a;
+            color: #003823;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dirty indicator dot */
+        .dirty-dot {
+            display: none;
+            width: 8px;
+            height: 8px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            margin-left: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        .dirty-dot.visible {
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Yazdırma (PDF) Ayarları */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+
+            .top-controls,
+            .actions-col,
+            .btn-add,
+            .game-selector-row,
+            .theme-toggle,
+            .modal-backdrop,
+            .dirty-dot,
+            .stats-container {
+                display: none !important;
+            }
+
+            body {
+                background-color: white !important;
+                color: #111 !important;
+                padding: 0;
+                font-size: 11px;
+            }
+
+            .container {
+                box-shadow: none;
+                margin: 0;
+                max-width: 100%;
+                padding: 0;
+                background: white !important;
+            }
+
+            .header-title {
+                background: #444 !important;
+                color: white !important;
+                font-size: 16px;
+                padding: 8px;
+                margin: 0 0 6px 0;
+                border-radius: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            table {
+                margin-top: 0;
+                font-size: 10px;
+            }
+
+            th {
+                background: #555 !important;
+                color: white !important;
+                font-size: 9px;
+                padding: 5px 4px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            td {
+                padding: 4px 4px;
+                font-size: 10px;
+                border-bottom: 1px solid #ccc;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Make selects look like plain text in print */
+            td select {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                border: none !important;
+                background: transparent !important;
+                padding: 1px 2px;
+                font-size: 10px;
+                font-weight: 600;
+                border-radius: 0;
+                width: auto;
+                color: #111 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Print-friendly colored badges for status */
+            td select.status-success { background-color: #d4edda !important; color: #155724 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.status-pending { background-color: #fff3cd !important; color: #856404 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.status-fail { background-color: #f8d7da !important; color: #721c24 !important; border-radius: 3px; padding: 2px 6px; }
+
+            /* Print-friendly colored badges for priority */
+            td select.prio-low { background-color: #e8eaed !important; color: #3c4043 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.prio-med { background-color: #d2e3fc !important; color: #174ea6 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.prio-high { background-color: #feefc3 !important; color: #e27200 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.prio-crit { background-color: #fad2cf !important; color: #a50e0e !important; border-radius: 3px; padding: 2px 6px; }
+
+            /* Print-friendly category badges */
+            td select.cat-install { background-color: #dce9cb !important; color: #2c481f !important; border-radius: 3px; padding: 2px 6px; }
+            td select.cat-ui { background-color: #ddebff !important; color: #2a3243 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.cat-core { background-color: #dbeeef !important; color: #133819 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.cat-perf { background-color: #c0e1ff !important; color: #3f4170 !important; border-radius: 3px; padding: 2px 6px; }
+            td select.cat-iap { background-color: #bbe1ba !important; color: #3f4528 !important; border-radius: 3px; padding: 2px 6px; }
+
+            [contenteditable="true"] {
+                border: none !important;
+            }
+
+            input[type="checkbox"] {
+                width: 14px;
+                height: 14px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Tighter column widths for print */
+            th:nth-child(1) { width: 4% !important; }   /* No */
+            th:nth-child(2) { width: 12% !important; }  /* Kategori */
+            th:nth-child(3) { width: 38% !important; }  /* Test Senaryosu */
+            th:nth-child(4) { width: 8% !important; }   /* Durum */
+            th:nth-child(5) { width: 8% !important; }   /* Öncelik */
+            th:nth-child(6) { width: 14% !important; }  /* Notlar */
+            th:nth-child(7) { width: 10% !important; }  /* Test Eden */
+            th:nth-child(8) { width: 4% !important; }   /* Onay */
+        }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .header-title {
+                font-size: 16px;
+                padding: 14px 44px 14px 12px; /* right padding avoids overlap with theme toggle */
+                margin: -12px -12px 14px -12px;
+                border-radius: 8px 8px 0 0;
+                letter-spacing: 0;
+            }
+
+            /* Move theme toggle so it doesn't overlap title */
+            .theme-toggle {
+                top: 10px;
+                right: 12px;
+                width: 38px;
+                height: 38px;
+                font-size: 17px;
+            }
+
+            /* Game selector */
+            .game-selector-row {
+                gap: 8px;
+                margin-bottom: 12px;
+                flex-wrap: wrap;
+            }
+            #game-selector {
+                min-width: 0;
+                flex: 1;
+                font-size: 13px;
+                padding: 7px 10px;
+            }
+
+            /* Top controls: stack vertically */
+            .top-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .filter-button {
+                justify-content: center;
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+            .export-dropdown {
+                width: 100%;
+                font-size: 13px;
+                padding: 10px 12px;
+                text-align: center;
+            }
+
+            /* Stats: wrap to two lines if needed */
+            .stats-container {
+                flex-wrap: wrap;
+                gap: 6px;
+                font-size: 13px;
+                padding: 10px 12px;
+                justify-content: center;
+                text-align: center;
+            }
+            .stats-container > div {
+                flex: 1 1 auto;
+                min-width: 100px;
+            }
+
+            /* Table: horizontal scroll */
+            .table-wrapper {
+                margin-top: 8px;
+            }
+            table {
+                min-width: 620px; /* ensures columns don't collapse */
+                font-size: 12px;
+            }
+            th, td {
+                padding: 7px 8px;
+                font-size: 12px;
+            }
+            th {
+                font-size: 11px;
+            }
+
+            /* Shrink fixed column widths for mobile */
+            th:nth-child(1) { width: 50px !important; }   /* No / drag */
+            th:nth-child(2) { width: 110px !important; }  /* Category */
+            th:nth-child(3) { width: 200px !important; }  /* Scenario */
+            th:nth-child(4) { width: 90px !important; }   /* Status */
+            th:nth-child(5) { width: 80px !important; }   /* Priority */
+            th:nth-child(6) { width: 100px !important; }  /* Notes */
+            th:nth-child(7) { width: 90px !important; }   /* Tester */
+            th:nth-child(8) { width: 48px !important; }   /* Approval */
+            th:nth-child(9) { width: 52px !important; }   /* Actions */
+
+            td select {
+                font-size: 11px;
+                padding: 5px 6px;
+            }
+
+            /* Make delete button compact */
+            .btn-delete {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+
+            /* Add row button */
+            .btn-add {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                margin-top: 14px;
+                font-size: 13px;
+                display: block;
+            }
+
+            /* Checkboxes: slightly larger tap target */
+            input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* Modal: full width on small screens */
+            .modal-box {
+                padding: 20px;
+                max-width: 95%;
+            }
+            .modal-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .modal-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            body {
+                padding: 6px;
+            }
+            .container {
+                padding: 10px;
+                border-radius: 6px;
+            }
+            .header-title {
+                font-size: 14px;
+                padding: 12px 42px 12px 10px;
+                margin: -10px -10px 12px -10px;
+            }
+            table {
+                min-width: 560px;
+                font-size: 11px;
+            }
+            th, td {
+                padding: 6px 6px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="theme-toggle" title="Tema Değiştir" onclick="toggleTheme()">☀️</button>
+
+    <!-- Switch Confirmation Modal -->
+    <div class="modal-backdrop" id="switch-modal">
+        <div class="modal-box">
+            <h3>⚠️ Kaydedilmemiş Değişiklikler</h3>
+            <p>Mevcut çalışmanızda kaydedilmemiş değişiklikler var. Farklı bir oyuna geçmeden önce ne yapmak istersiniz?</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="cancelSwitch()">İptal</button>
+                <button class="modal-btn modal-btn-discard" onclick="discardAndSwitch()">Değişiklikleri At</button>
+                <button class="modal-btn modal-btn-save" onclick="saveAndSwitch()">Kaydet & Geç</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header-title" id="header-title">Popsort QA Test</div>
+
+        <!-- Game Selector -->
+        <div class="game-selector-row">
+            <span class="game-selector-label">🎮 Oyun Seçimi:</span>
+            <select id="game-selector" onchange="onGameSelectorChange(this)">
+                <option value="popsort" selected>Popsort</option>
+                <option value="bakery">Bakery Factory</option>
+            </select>
+            <span class="dirty-dot" id="dirty-dot" title="Kaydedilmemiş değişiklikler var"></span>
+        </div>
+
+        <div class="top-controls">
+            <label class="filter-button">
+                <input type="checkbox" id="filter-fail-cb" onchange="applyFilter()">
+                <span>Sadece Başarısızları Göster</span>
+            </label>
+
+            <select class="btn export-dropdown" onchange="handleExport(this)">
+                <option value="" disabled="" selected="">📥 Dışa Aktar / Kaydet...</option>
+                <option value="csv">📊 CSV (Excel) Olarak İndir</option>
+                <option value="html">🌐 HTML Olarak Kaydet</option>
+                <option value="pdf">📄 PDF Olarak Yazdır</option>
+            </select>
+        </div>
+
+        <div class="stats-container">
+            <div id="total-tests">Toplam Test: 0</div>
+            <div id="success-rate">Başarı Oranı: 0%</div>
+            <div id="failed-tests">Başarısız Test: 0</div>
+        </div>
+
+        <div class="table-wrapper">
+        <table id="qa-table">
+            <thead>
+                <tr>
+                    <th style="width: 6%; text-align: center; cursor: pointer;" onclick="sortTable(0)" title="Sırala">☰ No ↕</th>
+                    <th style="width: 13%; cursor: pointer;" onclick="sortTable(1)" title="Sırala">Kategori ↕</th>
+                    <th style="width: 33%;">Test Senaryosu</th>
+                    <th style="width: 10%; cursor: pointer;" onclick="sortTable(3)" title="Sırala">Durum ↕</th>
+                    <th style="width: 10%; cursor: pointer;" onclick="sortTable(4)" title="Sırala">Öncelik ↕</th>
+                    <th style="width: 12%;">Test Cihazı / Notlar</th>
+                    <th style="width: 10%;">Test Eden</th>
+                    <th style="text-align: center; width: 6%;">Onay</th>
+                    <th class="actions-col">İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+        </div>
+
+        <button class="btn btn-add" onclick="addRow()">+ Yeni Satır/Test Ekle</button>
+    </div>
+
+    <script>
+        // =============================================
+        // GAME DATA DEFINITIONS
+        // =============================================
+        const GAME_SCHEMES = {
+            popsort: {
+                title: "Popsort QA Test",
+                headerStart: "#5a5792",
+                headerEnd: "#7b77b8",
+                tests: [
+                    { cat: "cat-install", scenario: "Oyunu silip tekrar yükleme veri kaybına yol açıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "Yükleme ekranı 10 saniyeden kısa sürüyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "İnternet bağlantısı koptuğunda oyun davranışları normal mi?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "Müzik, Ses ve Titreşim özellikleri düzgün çalışıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "İlk yükleme sorunsuz gerçekleşiyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-install", scenario: "Güncelleme yapıldığında eski veriler korunuyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-ui", scenario: "Edit Profile kısmı doğru çalışıyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Çentikli/delikli ekranlarda (notch) UI elemanları kesiliyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Geri butonu (Android) veya swipe (iOS) düzgün çalışıyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Metinler buton dışına taşıyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Oyundaki textlerde kayma/ eksiklik/ okunumaz fontlar var mı?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Shop menüsü açılıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Leaderboard menüsü düzgün yükleniyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Journey paneli açılıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Ayarlar menüsü açılıyor mu? / Yapılan uygulanıyor mu? / Terms ve Privacy açılıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Welcome Pack gibi indirim pop-upları çıkıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Oyun içi particle ve efektler doğru çalışıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Ana menü butonları doğru sayfalara yönlendiriyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-ui", scenario: "Pop-up pencereler tıklanınca kapanıyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Daily Bonus ekranı açılıyor ve ödül alınabiliyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-core", scenario: "Tear & Claim ekranı açılıyor ve ödül alınabiliyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-core", scenario: "Oyun içi özel güçler doğru çalışıyor mu? (Magnet vb.)", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Bir leveli kaybedince devam etme-quit paneli gözüküyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Can sistemi doğru çalışıyor mu? Can azalıyor ve doluyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Oyun içi fizik motoru beklenen tepkileri veriyor mu? (Popcornların düşmesi fiziği, Conveyor Belt mekaniği)", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-core", scenario: "Seviye atlama ve bölüm geçme çalışıyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-perf", scenario: "Pil tüketimi anormal seviyede mi?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-perf", scenario: "Oyun sırasında FPS düşüşü (drop) yaşanıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-perf", scenario: "Cihazda aşırı ısınma oluyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-perf", scenario: "Farklı en-boy oranlarında (tablet vs telefon) ekran bozuluyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-perf", scenario: "Arka plana atıp (background) tekrar açınca oyun çöküyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-perf", scenario: "Bildirim geldiğinde veya arama çalınca oyun çöküyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-iap", scenario: "Satın alma işlemi başarıyla tamamlanıyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-iap", scenario: "İnternet kesilince satın alma nasıl tepki veriyor?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-iap", scenario: "Ödüllü reklam izlenince ödül veriliyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-iap", scenario: "Reklam kapatma (X) butonu düzgün çalışıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-iap", scenario: "Satın alımları geri yükle (Restore Purchases) çalışıyor mu?", status: "status-pending", prio: "prio-high" }
+                ]
+            },
+            bakery: {
+                title: "Bakery Factory QA Test",
+                headerStart: "#b52f9a",
+                headerEnd: "#d44fbf",
+                tests: [
+                    { cat: "cat-install", scenario: "Oyunu silip tekrar yükleme veri kaybına yol açıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "Yükleme ekranı 10 saniyeden kısa sürüyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "İnternet bağlantısı koptuğunda oyun davranışları normal mi?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "Müzik, Ses ve Titreşim özellikleri düzgün çalışıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-install", scenario: "İlk yükleme sorunsuz gerçekleşiyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-install", scenario: "Güncelleme yapıldığında eski veriler korunuyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-ui", scenario: "Edit Profile kısmı doğru çalışıyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Çentikli/delikli ekranlarda (notch) UI elemanları kesiliyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Geri butonu (Android) veya swipe (iOS) düzgün çalışıyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Metinler buton dışına taşıyor mu?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-ui", scenario: "Oyundaki textlerde kayma/ eksiklik/ okunumaz fontlar var mı?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Shop menüsü açılıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Leaderboard menüsü düzgün yükleniyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Journey paneli açılıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Ayarlar menüsü açılıyor mu? / Yapılan uygulanıyor mu? / Terms ve Privacy açılıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Welcome Pack gibi indirim pop-upları çıkıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Oyun içi particle ve efektler doğru çalışıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Ana menü butonları doğru sayfalara yönlendiriyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-ui", scenario: "Pop-up pencereler tıklanınca kapanıyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-ui", scenario: "Daily Bonus ekranı açılıyor ve ödül alınabiliyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-ui", scenario: "Collection ekranı açılıyor ve düzgün yükleniyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-core", scenario: "Oyun içi özel güçler doğru çalışıyor mu? (Magnet vb.)", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Bir leveli kaybedince devam etme-quit paneli gözüküyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Can sistemi doğru çalışıyor mu? Can azalıyor ve doluyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-core", scenario: "Oyun içi fizik motoru beklenen tepkileri veriyor mu? (Arabaların gidişi, dolum animasyonları vb.)", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-core", scenario: "Seviye atlama ve bölüm geçme çalışıyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-perf", scenario: "Pil tüketimi anormal seviyede mi?", status: "status-pending", prio: "prio-low" },
+                    { cat: "cat-perf", scenario: "Oyun sırasında FPS düşüşü (drop) yaşanıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-perf", scenario: "Cihazda aşırı ısınma oluyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-perf", scenario: "Farklı en-boy oranlarında (tablet vs telefon) ekran bozuluyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-perf", scenario: "Arka plana atıp (background) tekrar açınca oyun çöküyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-perf", scenario: "Bildirim geldiğinde veya arama çalınca oyun çöküyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-iap", scenario: "Satın alma işlemi başarıyla tamamlanıyor mu?", status: "status-pending", prio: "prio-crit" },
+                    { cat: "cat-iap", scenario: "İnternet kesilince satın alma nasıl tepki veriyor?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-iap", scenario: "Ödüllü reklam izlenince ödül veriliyor mu?", status: "status-pending", prio: "prio-high" },
+                    { cat: "cat-iap", scenario: "Reklam kapatma (X) butonu düzgün çalışıyor mu?", status: "status-pending", prio: "prio-med" },
+                    { cat: "cat-iap", scenario: "Satın alımları geri yükle (Restore Purchases) çalışıyor mu?", status: "status-pending", prio: "prio-high" }
+                ]
+            }
+        };
+
+        const CAT_OPTIONS = [
+            { value: "cat-install", text: "Kurulum ve Yükleme" },
+            { value: "cat-ui", text: "UI ve UX" },
+            { value: "cat-core", text: "Core Gameplay" },
+            { value: "cat-perf", text: "Performans ve Cihaz" },
+            { value: "cat-iap", text: "IAP ve Reklamlar" }
+        ];
+        const STATUS_OPTIONS = [
+            { value: "status-success", text: "Başarılı" },
+            { value: "status-pending", text: "Beklemede" },
+            { value: "status-fail", text: "Başarısız" }
+        ];
+        const PRIO_OPTIONS = [
+            { value: "prio-low", text: "Düşük" },
+            { value: "prio-med", text: "Orta" },
+            { value: "prio-high", text: "Yüksek" },
+            { value: "prio-crit", text: "Kritik" }
+        ];
+
+        // =============================================
+        // STATE
+        // =============================================
+        let currentGame = "popsort";
+        let isDirty = false;
+        let pendingSwitchTo = null;
+        // Per-game saved snapshots (HTML of tbody)
+        let savedSnapshots = {};
+
+        // =============================================
+        // THEME
+        // =============================================
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('qa-theme', theme);
+            document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        // =============================================
+        // DIRTY TRACKING
+        // =============================================
+        function markDirty() {
+            isDirty = true;
+            document.getElementById('dirty-dot').classList.add('visible');
+        }
+
+        function clearDirty() {
+            isDirty = false;
+            document.getElementById('dirty-dot').classList.remove('visible');
+        }
+
+        function attachDirtyListeners() {
+            const tbody = document.getElementById('table-body');
+            // Listen for input events on the entire tbody (covers contenteditable, checkboxes, selects)
+            tbody.addEventListener('input', markDirty);
+            tbody.addEventListener('change', markDirty);
+        }
+
+        // =============================================
+        // GAME SWITCHING
+        // =============================================
+        function onGameSelectorChange(sel) {
+            const newGame = sel.value;
+            if (newGame === currentGame) return;
+
+            if (isDirty) {
+                pendingSwitchTo = newGame;
+                // Revert the selector visually
+                sel.value = currentGame;
+                showSwitchModal();
+            } else {
+                switchToGame(newGame);
+            }
+        }
+
+        function showSwitchModal() {
+            document.getElementById('switch-modal').classList.add('active');
+        }
+        function hideSwitchModal() {
+            document.getElementById('switch-modal').classList.remove('active');
+        }
+
+        function cancelSwitch() {
+            pendingSwitchTo = null;
+            hideSwitchModal();
+        }
+
+        function discardAndSwitch() {
+            hideSwitchModal();
+            clearDirty();
+            if (pendingSwitchTo) {
+                switchToGame(pendingSwitchTo);
+                pendingSwitchTo = null;
+            }
+        }
+
+        function saveAndSwitch() {
+            hideSwitchModal();
+            // Save current state
+            saveCurrentSnapshot();
+            clearDirty();
+            if (pendingSwitchTo) {
+                switchToGame(pendingSwitchTo);
+                pendingSwitchTo = null;
+            }
+        }
+
+        function saveCurrentSnapshot() {
+            // Persist select/checkbox states into DOM before saving
+            document.querySelectorAll('#table-body select').forEach(sel => {
+                sel.querySelectorAll('option').forEach(opt => {
+                    if (opt.value === sel.value) opt.setAttribute('selected', 'selected');
+                    else opt.removeAttribute('selected');
+                });
+            });
+            document.querySelectorAll('#table-body input[type="checkbox"]').forEach(cb => {
+                if (cb.checked) cb.setAttribute('checked', 'checked');
+                else cb.removeAttribute('checked');
+            });
+            savedSnapshots[currentGame] = document.getElementById('table-body').innerHTML;
+        }
+
+        function switchToGame(gameKey) {
+            currentGame = gameKey;
+            document.getElementById('game-selector').value = gameKey;
+
+            const scheme = GAME_SCHEMES[gameKey];
+            
+            // Update header
+            document.getElementById('header-title').textContent = scheme.title;
+            document.documentElement.style.setProperty('--header-color-start', scheme.headerStart);
+            document.documentElement.style.setProperty('--header-color-end', scheme.headerEnd);
+
+            // Load saved snapshot or render fresh
+            if (savedSnapshots[gameKey]) {
+                document.getElementById('table-body').innerHTML = savedSnapshots[gameKey];
+            } else {
+                renderTests(scheme.tests);
+            }
+
+            // Re-init
+            initDragAndDrop();
+            updateStats();
+            applyFilter();
+            clearDirty();
+        }
+
+        function renderTests(tests) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            tests.forEach((test, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = buildRowHTML(test, idx + 1);
+                tbody.appendChild(row);
+            });
+        }
+
+        function buildRowHTML(test, index) {
+            const catOpts = CAT_OPTIONS.map(o =>
+                `<option value="${o.value}"${o.value === test.cat ? ' selected="selected"' : ''}>${o.text}</option>`
+            ).join('');
+            const statusOpts = STATUS_OPTIONS.map(o =>
+                `<option value="${o.value}"${o.value === test.status ? ' selected="selected"' : ''}>${o.text}</option>`
+            ).join('');
+            const prioOpts = PRIO_OPTIONS.map(o =>
+                `<option value="${o.value}"${o.value === test.prio ? ' selected="selected"' : ''}>${o.text}</option>`
+            ).join('');
+
+            return `
+                <td class="drag-handle" title="Sıralamak için sürükle"><span class="drag-icon">☰</span> <span class="row-index">${index}</span></td>
+                <td><select class="${test.cat}" onchange="updateSelectColor(this)">${catOpts}</select></td>
+                <td contenteditable="true">${test.scenario}</td>
+                <td><select class="${test.status}" onchange="handleStatusChange(this)">${statusOpts}</select></td>
+                <td><select class="${test.prio}" onchange="updateSelectColor(this)">${prioOpts}</select></td>
+                <td contenteditable="true">${test.notes || ''}</td>
+                <td contenteditable="true">${test.tester || ''}</td>
+                <td style="text-align: center;"><input type="checkbox" class="approval-cb" onchange="handleCheckboxChange(this)"${test.checked ? ' checked="checked"' : ''}></td>
+                <td class="actions-col"><button class="btn btn-delete" onclick="deleteRow(this)">Sil</button></td>
+            `;
+        }
+
+        // =============================================
+        // PAGE INIT
+        // =============================================
+        document.addEventListener("DOMContentLoaded", () => {
+            // Apply dark theme by default
+            const savedTheme = localStorage.getItem('qa-theme') || 'dark';
+            setTheme(savedTheme);
+
+            // Load the first game
+            switchToGame('popsort');
+            attachDirtyListeners();
+        });
+
+        // =============================================
+        // FILTER
+        // =============================================
+        function applyFilter() {
+            const cb = document.getElementById('filter-fail-cb');
+            const filterBtnLabel = cb.closest('.filter-button');
+            const spanText = filterBtnLabel.querySelector('span');
+
+            if (cb.checked) {
+                filterBtnLabel.classList.add('active');
+                spanText.innerText = 'Tümünü Göster';
+            } else {
+                filterBtnLabel.classList.remove('active');
+                spanText.innerText = 'Sadece Başarısızları Göster';
+            }
+
+            const filterFail = cb.checked;
+            const rows = document.querySelectorAll('#table-body tr');
+
+            rows.forEach(row => {
+                const selectElement = row.querySelector('td:nth-child(4) select');
+                if (selectElement) {
+                    const status = selectElement.value;
+                    if (filterFail && status !== 'status-fail') {
+                        row.style.display = 'none';
+                    } else {
+                        row.style.display = '';
+                    }
+                }
+            });
+        }
+
+        function updateRowIndices() {
+            const rows = Array.from(document.querySelectorAll('#table-body tr'));
+            rows.forEach((row, index) => {
+                const indexSpan = row.querySelector('.row-index');
+                if (indexSpan && !indexSpan.innerText.trim()) {
+                    indexSpan.innerText = index + 1;
+                }
+            });
+        }
+
+        let sortDirections = [1, 1, 1, 1, 1, 1];
+        function sortTable(colIndex) {
+            const tbody = document.getElementById('table-body');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            const getSortValue = (row, colIndex) => {
+                if (colIndex === 0) {
+                    const indexSpan = row.querySelector('.row-index');
+                    return indexSpan ? parseInt(indexSpan.innerText) || 0 : 0;
+                }
+                const select = row.cells[colIndex].querySelector('select');
+                if (!select) return "";
+                const val = select.value;
+                
+                if (colIndex === 3) {
+                    const statusWeights = { 'status-success': 3, 'status-pending': 2, 'status-fail': 1 };
+                    return statusWeights[val] || 0;
+                } else if (colIndex === 4) {
+                    const prioWeights = { 'prio-crit': 4, 'prio-high': 3, 'prio-med': 2, 'prio-low': 1 };
+                    return prioWeights[val] || 0;
+                } else {
+                    return select.options[select.selectedIndex].text.toLowerCase();
+                }
+            };
+
+            const dir = sortDirections[colIndex] || 1;
+            rows.sort((a, b) => {
+                const valA = getSortValue(a, colIndex);
+                const valB = getSortValue(b, colIndex);
+                if (valA > valB) return 1 * dir;
+                if (valA < valB) return -1 * dir;
+                return 0;
+            });
+            sortDirections[colIndex] = -dir;
+            rows.forEach(row => tbody.appendChild(row));
+            markDirty();
+        }
+
+        // Dropdown (Select) renk güncelleyici
+        function updateSelectColor(selectElement) {
+            const isStatusSelect = selectElement.classList.contains('status-select');
+            selectElement.className = selectElement.className.replace(/\b(cat|status|prio)-\S+/g, '');
+            selectElement.classList.add(selectElement.value);
+            if (isStatusSelect) {
+                selectElement.classList.add('status-select');
+            }
+        }
+
+        // Durum dropdown'u değiştiğinde
+        function handleStatusChange(selectElement) {
+            updateSelectColor(selectElement);
+            const row = selectElement.closest('tr');
+            const cb = row.querySelector('.approval-cb');
+
+            if (selectElement.value === 'status-success' || selectElement.value === 'status-fail') {
+                cb.checked = true;
+            } else {
+                cb.checked = false;
+            }
+            updateStats();
+            applyFilter();
+        }
+
+        // Checkbox değiştiğinde
+        function handleCheckboxChange(checkboxElement) {
+            const row = checkboxElement.closest('tr');
+            const statusSelect = row.querySelector('td:nth-child(4) select');
+            if (!statusSelect) return;
+            
+            const currentStatus = statusSelect.value;
+
+            if (checkboxElement.checked) {
+                if (currentStatus === 'status-pending') {
+                    statusSelect.value = 'status-success';
+                }
+            } else {
+                statusSelect.value = 'status-pending';
+            }
+
+            updateSelectColor(statusSelect);
+            updateStats();
+            applyFilter();
+        }
+
+        // --- Sürükle Bırak (Drag and Drop) İşlevleri ---
+        function initDragAndDrop() {
+            const tbody = document.getElementById('table-body');
+
+            // Remove old listeners by cloning (prevent stacking)
+            const newTbody = tbody.cloneNode(true);
+            tbody.parentNode.replaceChild(newTbody, tbody);
+
+            // Re-attach dirty listeners
+            newTbody.addEventListener('input', markDirty);
+            newTbody.addEventListener('change', markDirty);
+
+            newTbody.addEventListener('mousedown', function (e) {
+                const handle = e.target.closest('.drag-handle');
+                if (handle) {
+                    handle.closest('tr').setAttribute('draggable', 'true');
+                }
+            });
+            newTbody.addEventListener('mouseup', function (e) {
+                const handle = e.target.closest('.drag-handle');
+                if (handle) {
+                    handle.closest('tr').removeAttribute('draggable');
+                }
+            });
+
+            document.querySelectorAll('#table-body tr').forEach(makeRowDraggable);
+
+            newTbody.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(newTbody, e.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (draggable) {
+                    if (afterElement == null) {
+                        newTbody.appendChild(draggable);
+                    } else {
+                        newTbody.insertBefore(draggable, afterElement);
+                    }
+                }
+            });
+        }
+
+        function makeRowDraggable(row) {
+            row.addEventListener('dragstart', () => {
+                row.classList.add('dragging');
+            });
+            row.addEventListener('dragend', () => {
+                row.classList.remove('dragging');
+                row.removeAttribute('draggable');
+                markDirty();
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('tr:not(.dragging)')].filter(el => el.style.display !== 'none');
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Yeni satır ekleme
+        function addRow() {
+            const tbody = document.getElementById('table-body');
+            const newRow = document.createElement('tr');
+
+            let max = 0;
+            document.querySelectorAll('.row-index').forEach(span => {
+                let val = parseInt(span.innerText) || 0;
+                if(val > max) max = val;
+            });
+
+            const test = { cat: 'cat-install', scenario: 'Yeni test senaryosu...', status: 'status-pending', prio: 'prio-med' };
+            newRow.innerHTML = buildRowHTML(test, max + 1);
+
+            tbody.appendChild(newRow);
+            makeRowDraggable(newRow);
+            applyFilter();
+            updateStats();
+            markDirty();
+        }
+
+        // Satır Silme
+        function deleteRow(buttonElement) {
+            if (confirm("Bu test senaryosunu silmek istediğinize emin misiniz?")) {
+                const row = buttonElement.closest('tr');
+                row.remove();
+                updateStats();
+                markDirty();
+            }
+        }
+
+        // İstatistik Güncelleyici
+        function updateStats() {
+            const rows = document.querySelectorAll('#table-body tr');
+            const total = rows.length;
+            let successCount = 0;
+            let failCount = 0;
+
+            rows.forEach(row => {
+                const statusSelect = row.querySelector('td:nth-child(4) select');
+                if (statusSelect) {
+                    if (statusSelect.value === 'status-success') successCount++;
+                    if (statusSelect.value === 'status-fail') failCount++;
+                }
+            });
+
+            const successRate = total === 0 ? 0 : Math.round((successCount / total) * 100);
+
+            document.getElementById('total-tests').innerText = `Toplam Test: ${total}`;
+            document.getElementById('success-rate').innerText = `Başarı Oranı: ${successRate}%`;
+            document.getElementById('failed-tests').innerText = `Başarısız Test: ${failCount}`;
+        }
+
+        // Dışa Aktarma Yöneticisi
+        function handleExport(selectElement) {
+            const type = selectElement.value;
+            if (type === 'csv') exportToCSV();
+            if (type === 'html') exportToHTML();
+            if (type === 'pdf') exportToPDF();
+            selectElement.value = "";
+        }
+
+        // PDF: swap selects with text spans, print, then restore
+        function exportToPDF() {
+            const selects = document.querySelectorAll('#qa-table td select');
+            const backups = [];
+
+            // Replace each select with a styled span showing selected text
+            selects.forEach(sel => {
+                const span = document.createElement('span');
+                span.textContent = sel.options[sel.selectedIndex].text;
+                span.className = 'print-badge ' + sel.value;
+                span.setAttribute('data-value', sel.value);
+                // Copy the select's class-based colors as inline style for print
+                const computed = getComputedStyle(sel);
+                span.style.cssText = `
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    background-color: ${computed.backgroundColor};
+                    color: ${computed.color};
+                    white-space: nowrap;
+                `;
+                backups.push({ parent: sel.parentNode, select: sel, span: span });
+                sel.parentNode.replaceChild(span, sel);
+            });
+
+            // Also hide the "No" column header drag icon for cleaner output
+            const dragHandles = document.querySelectorAll('.drag-handle .drag-icon');
+            dragHandles.forEach(icon => icon.style.display = 'none');
+
+            // Clean up the first header text to remove the burger and sort icons
+            const firstTh = document.querySelector('#qa-table th:first-child');
+            const originalThHTML = firstTh.innerHTML;
+            firstTh.innerHTML = 'No';
+
+            // Print
+            window.print();
+
+            // Restore selects
+            backups.forEach(b => {
+                b.parent.replaceChild(b.select, b.span);
+            });
+
+            // Restore drag icons and header
+            dragHandles.forEach(icon => icon.style.display = '');
+            firstTh.innerHTML = originalThHTML;
+        }
+
+        function exportToCSV() {
+            let csv = [];
+            const rows = document.querySelectorAll("table tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                let colCount = cols.length - 1;
+
+                for (let j = 1; j < colCount; j++) {
+                    let col = cols[j];
+                    let data = "";
+
+                    let select = col.querySelector("select");
+                    if (select) {
+                        data = select.options[select.selectedIndex].text;
+                    } else if (col.querySelector("input[type='checkbox']")) {
+                        data = col.querySelector("input").checked ? "Onaylandı" : "Beklemede";
+                    } else {
+                        data = col.innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                    }
+
+                    row.push('"' + data + '"');
+                }
+                csv.push(row.join(","));
+            }
+
+            let csvFile = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+            downloadFile(csvFile, "csv");
+        }
+
+        function exportToHTML() {
+            const exportDropdown = document.querySelector('.export-dropdown');
+            if (exportDropdown) exportDropdown.value = "";
+
+            // Persist state into DOM
+            saveCurrentSnapshot();
+
+            let htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            let blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+            downloadFile(blob, "html");
+        }
+
+        function downloadFile(blob, extension) {
+            const scheme = GAME_SCHEMES[currentGame];
+            const gameName = scheme.title.replace(/\s+/g, '_');
+            let downloadLink = document.createElement("a");
+            let dateStr = new Date().toISOString().split('T')[0];
+
+            downloadLink.download = `${gameName}_QA_Raporu_${dateStr}.${extension}`;
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
+
+
+</body></html>
